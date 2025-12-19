@@ -482,3 +482,154 @@ Action (action.yml) = definisce come è fatta la tua action (input, runs, brandi
 
 Nel workflow usi jobs e steps.
 Nell’action usi runs, inputs, branding.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ Perché e quando usare chmod -R 775 entrypoint.sh (spiegazione beginner)
+
+chmod = cambia i permessi di file/cartelle.
+-R = “ricorsivo” → applica i permessi a tutto dentro una cartella (subdirectory e file).
+775 = tre cifre (owner, group, others):
+
+7 = rwx (read, write, execute)
+7 = rwx
+5 = r-x (read, execute)
+
+
+Per un singolo file come entrypoint.sh, non serve -R. Basta
+
+chmod 775 entrypoint.sh
+
+o piu semplice :
+
+
+chmod +x entrypoint.sh
+
+
+
+
+
+
+
+(+x aggiunge il permesso di esecuzione)
+
+Perché il tutorial usa -R 775?
+Spesso lo usano quando c’è una cartella con tanti file di script (es. .github/actions/podcast-generator/). In quel caso rendono tutto eseguibile/leggibile, così non ci sono sorprese.
+Nel tuo caso, con un singolo entrypoint.sh, è sufficiente chmod +x entrypoint.sh.
+
+
+
+chmod +x — serve “sempre” con Docker?
+Cosa significa:
+
+chmod +x entrypoint.sh = dai permesso di esecuzione al file entrypoint.sh.
+Senza questo permesso, quando Docker prova a eseguire lo script come programma, può uscire “Permission denied”.
+
+Serve sempre?
+
+Serve se vuoi eseguire lo script (come ENTRYPOINT o CMD).
+Se lo chiami esplicitamente con bash /entrypoint.sh, il bit +x non è strettamente necessario (perché lo esegue bash).
+Ma nella tua action stai usando ENTRYPOINT ["/entrypoint.sh"] → quindi sì, devi dare +x.
+
+Non è Docker “magia”: è permesso del file (chi può eseguirlo).
+👉 In breve: tienilo.
+
+
+
+
+DEBUG : 
+
+Prima: 2 risposte flash
+Perché non vedi più log?
+Se nello step “Build container for action use” vedi solo “Docker build failed with exit code 1” e nulla sopra, vuol dire che l’errore è avvenuto subito (es. typo nel Dockerfile) e GitHub non ha catturato righe utili. Dopo le fix sotto, se fallisce ancora, vedrai la riga precisa (COPY / RUN …) che rompe.
+
+
+
+
+CAMBIO FILE DOCKERFILE ACTION.YAML E WORKFLOW SU GITHUB:
+
+1) Cosa abbiamo cambiato (lista chiara con motivo)
+A) Dockerfile
+Problemi:
+
+pythob3.10: typo → blocca la build.
+Non rendevi l’entrypoint eseguibile → rischio “Permission denied”.
+(Manteniamo COPY feed.py /usr/bin/feed.py come vuoi tu. Non lo rimuovo.)
+
+Cambi:
+
+pythob3.10 → rimosso e sostituito con python3 (pacchetto corretto).
+Aggiunto RUN chmod +x /entrypoint.sh (permessi esecuzione).
+Manteniamo ENTRYPOINT ["/entrypoint.sh"].
+
+Perché è errore:
+
+Un nome pacchetto sbagliato fa fallire apt-get install.
+Senza chmod +x, Docker non può eseguire lo script anche se lo trova.
+
+
+B) action.yaml
+Problemi:
+
+default: ${{ github.actor }} dentro Docker Action: non è consentito (i default devono essere statici).
+required: true: obbliga sempre a passare i valori; meglio renderli opzionali e passarli dal workflow.
+
+Cambi:
+
+required: true → false.
+default: → stringa vuota "" (niente espressioni).
+
+Perché è errore:
+Le espressioni ${{ ... }} nei default dentro una Docker Action non vengono risolte → parsing error.
+
+C) entrypoint.sh
+Problemi:
+
+git **confing** → typo (comando inesistente).
+Usi GITHUB_ACTOR, ma gli input della action arrivano come INPUT_NAME e INPUT_EMAIL.
+git push. (punto) → comando sbagliato.
+Esegui python3 /usr/bin/feed.py (ok visto che lo copi nel container).
+(Facoltativo ma utile) cd /github/workspace per far funzionare Git sul repo montato.
+
+Cambi:
+
+confing → config (due volte).
+Uso INPUT_NAME e INPUT_EMAIL.
+git push. → git push --set-upstream origin main.
+Aggiunto cd /github/workspace.
+Aggiunto || echo "Nessun cambiamento..." per non fallire se non ci sono modifiche.
+
+Perché è errore:
+
+confing non esiste → script si ferma.
+git push. ha sintassi invalida.
+Senza cd, a volte Git non riconosce il repo (safe.directory).
+
+
+D) Workflow (.github/workflows/…)
+Problemi:
+
+Mancano i parametri with: per passare name ed email all’action (visto che abbiamo default vuoti).
+
+Cambi:
+
+Aggiunto with:
+
+
+with:
+  name: ${{  name: ${{ github.actor }}
+
+Perché è errore:
+
+Senza with, INPUT_NAME e INPUT_EMAIL in entrypoint rimangono vuoti → Git usa valori globali vuoti o fallisce nelle firme commit.

@@ -1,3 +1,4 @@
+
 name: "Podcast Generator"
 author: "Alessio Cardone"
 description: "Generates a feed for a podcast"
@@ -9,10 +10,10 @@ branding:
   color: "red"
 inputs:
   email:
-    description: The committer's email address
-    required: true
-    default: ${{ github.actor }}@localhost
+    description: "The committer's email address"
+    required: false           # <-- CAMBIATO da true a false
+    default: ""               # <-- CAMBIATO: stringa vuota, niente espressioni
   name:
-    description: The committer's name 
-    required: true 
-    default: ${{ github.actor }}
+    description: "The committer's name"
+    required: false           # <--    required: false           # <-- CAMBIATO da true a false
+
