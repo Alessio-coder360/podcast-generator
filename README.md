@@ -73,6 +73,17 @@ Se vuoi, ti preparo una matrice rapida pro/contro secondo lo scenario del tuo pr
 DUCKER :
 
 Un Dockerfile è un file di testo che dice a Docker come costruire un’immagine (una “foto” del tuo ambiente di esecuzione). Quell’immagine poi la usi per creare un container (il “programma” che gira isolato).
+Cos’è un’immagine Docker? E cos’è l’host?
+
+Immagine Docker = NON è una foto! È un pacchetto che contiene:
+
+un sistema operativo base (es. Ubuntu),
+programmi installati (es. Python, Git),
+i tuoi file (es. feed.py, entrypoint.sh).
+
+
+Host = il tuo computer (o la macchina dove fai docker build).
+Quando scrivi COPY feed.py /usr/bin/feed.py, Docker prende il file dal tuo PC e lo mette dentro l’immagine.
 
 SINTASSI FILE : 
 
@@ -132,6 +143,12 @@ ENTRYPOINT ["/entrypoint.sh"]
 Dice a Docker: quando avvii il container, esegui questo script come “programma principale”.
 
 
+
+Cos’è entrypoint.sh e perché lo metti come ENTRYPOINT?
+
+.sh = estensione per script shell (Bash).
+Lo metti come ENTRYPOINT perché vuoi che quando il container parte, esegua quello script.
+Lo script prepara l’ambiente (es. configura Git) e poi lancia il tuo programma (es. python3 feed.py)
 
 
 
@@ -199,12 +216,78 @@ Non li scrivi tu manualmente nel terminale: li metti nello script o nel file YAM
 
 
 
-a) 
+a) SPIEGHIAMO : 
 
 git confing --global user.name "${GITHUB_ACTOR}"
 
 git confing --global user.email "${INPUT_EMAIL}"
 
+git config --global --add safe.directory /github/workspace
+
+
+
+
+
+git config --global user.name "${GITHUB_ACTOR}"
+
+git → il programma Git.
+config → il comando per configurare Git.
+--global → opzione lunga (due trattini) che significa: “applica questa configurazione a livello globale (per tutti i repo su questa macchina)”.
+user.name → la chiave che stai impostando (nome utente).
+"${GITHUB_ACTOR}" → il valore da assegnare.
+
+Le virgolette servono per gestire spazi.
+${GITHUB_ACTOR} è una variabile d’ambiente: GitHub Actions la riempie con il tuo username GitHub.
+
+
+
+
+2) git config --global user.email "${INPUT_EMAIL}"
+
+Stessa logica, ma imposta l’email globale.
+${INPUT_EMAIL} è un’altra variabile d’ambiente (iniettata dal workflow).
+
+
+3) git config --global --add safe.directory /github/workspace
+
+--add → aggiunge una nuova voce alla configurazione.
+safe.directory → dice a Git che la cartella /github/workspace è sicura (serve nei runner CI per evitare warning).
+/github/workspace → percorso della directory.
+
+
+ Risposta alla tua domanda su:
+git config --global --add safe.directory /github/workspace
+
+Sì, puoi dire a Git quali directory sono “sicure”.
+Serve nei runner CI/CD (es. GitHub Actions) perché Git, per sicurezza, blocca operazioni in cartelle che non riconosce come “tue”.
+/github/workspace è la cartella dove GitHub Actions clona la tua repo quando esegue il workflow.
+Non è il tuo dominio, è la directory locale del runner.
+Se fosse la tua macchina, potresti mettere /home/alessio/progetto come safe directory.
+
+📌 Documentazione ufficiale: Git config safe.directory
+
+
+Regola generale per leggere comandi Git:
+
+Programma: git
+Comando: config, push, add, ecc.
+Opzioni: iniziano con - (corte) o -- (lunghe).
+Argomenti: quello che il comando deve usare (es. nome, email, branch).
+
+
+🔍 Parte 2: Analisi logica di git push --set-upstream origin main
+Facciamola come grammatica ma più chiara e utile:
+
+git → soggetto (chi agisce).
+push → verbo (azione: “spingi i commit”).
+origin → complemento di termine (dove? → il remote).
+main → complemento oggetto (cosa? → il branch).
+--set-upstream → avverbio speciale (modifica il verbo: “collega questo branch locale al remoto”).
+
+📌 Serve o no?
+
+Sì, la prima volta che crei un branch e vuoi collegarlo al remoto.
+Dopo la prima volta, NO: basta git push.
 
 
 
@@ -245,15 +328,18 @@ in entrypoint, perche e dove abbiamo copiato il file feed.py nel file Ducker
 
 
 
-6 ) Analisi logica di git push --set-upstream origin main
-Facciamola come se fosse grammatica:
+6 ) Analisi logica dei comandi Git (per diventare “maestro”)
+Esempio:
+git push --set-upstream origin main
 
-git = il “soggetto” → il programma che esegue i comandi.
-push = il “verbo” → l’azione: “spingi i commit verso il server remoto”.
-origin = il “complemento di termine” → il nome del remote (di solito il tuo repo su GitHub).
-main = il “complemento oggetto” → il nome del branch che vuoi aggiornare.
---set-upstream = un “avverbio” speciale → dice: “collega questo branch locale al branch remoto, così in futuro basta fare git push senza specificare origin/main”.
+git → programma (chi fa l’azione)
+push → verbo (cosa fai)
+origin → destinatario (remote)
+main → oggetto (branch)
+--set-upstream → opzione (modifica il comportamento del verbo)
 
+Regola generale:
 
-Le doppie lineette -- indicano opzioni lunghe (es. --set-upstream).
-Le singole - indicano opzioni corte (es. -m per il messaggio).
+Comando = programma + azione (git push)
+Opzioni = modificatori (--set-upstream)
+Argomenti = target (origin main)
