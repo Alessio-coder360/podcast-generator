@@ -409,7 +409,7 @@ color → Colore del badge (es. red, blue, green).
 
 
 
-3) input:
+3) inputs:   occhio alla s se sono due 
   email:
     description: The committer's email address
     required: true
@@ -461,3 +461,24 @@ Perché qui non si usa using e steps come nel workflow?
 Workflow YAML (es. .github/workflows/main.yml) usa jobs e steps perché definisce cosa fare.
 Action YAML (es. action.yml) definisce come è fatta l’action.
 Branding non serve nel workflow perché è solo per il Marketplace.
+
+
+
+
+
+Perché nella tua repo generetor c’è scritto “Publish this action to Marketplace”?
+Perché GitHub ti permette di pubblicare la tua action nel GitHub Actions Marketplace.
+Il Marketplace è come un “store” dove altri sviluppatori possono trovare e usare la tua action.
+Se la pubblichi:
+
+Appare con il nome, descrizione, branding che hai messo in action.yml.
+
+
+
+ Differenza tra workflow e action
+
+Workflow (.github/workflows/*.yml) = definisce quando e cosa fare (trigger, jobs, steps).
+Action (action.yml) = definisce come è fatta la tua action (input, runs, branding).
+
+Nel workflow usi jobs e steps.
+Nell’action usi runs, inputs, branding.
