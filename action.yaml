@@ -8,12 +8,13 @@ runs:
 branding: 
   icon: "git-branch"
   color: "red"
-inputs:
+inputsinputs:
   email:
     description: "The committer's email address"
-    required: false           # <-- CAMBIATO da true a false
-    default: ""               # <-- CAMBIATO: stringa vuota, niente espressioni
+    required: false
+    default: ""
   name:
     description: "The committer's name"
-    required: false           # <--    required: false           # <-- CAMBIATO da true a false
+    required: false
+
 
