@@ -343,3 +343,121 @@ Regola generale:
 Comando = programma + azione (git push)
 Opzioni = modificatori (--set-upstream)
 Argomenti = target (origin main)
+
+
+
+
+
+action.yaml :
+questo file action fondamentalmente , controlla cosa sta accadendo a tutti i file dentro questa nuova repo. Quindi quando si usa un altra repository (A) per eseguire questa repository(B), A troverà questo file action, capirà che è necessario utilizzare l 'immagine Docker, per eseguire il file Docker per generare il server dentro cui si esegue il file entrypoint, che verra settato secondo le configurazione ( esmepio variabili globale Git) al suo interno.
+E SOPRATUTTO ESEGUIRÀ IL FILE FEED.PY 
+
+E PUSHA TUTTO DENTRO IL SERVEER
+
+
+QUINDI CHE COSA EH action.yaml qui : 
+
+È il manifesto di una GitHub Action personalizzata.
+Dice a GitHub:
+
+Nome e descrizione dell’action.
+Come deve essere eseguita (con Docker, Node, ecc.).
+Quali input accetta (es. email).
+Branding (icona e colore per il Marketplace).
+
+Quindi è la configurazione che collega:
+
+Il tuo Dockerfile (che crea l’immagine con entrypoint.sh).
+Il workflow della repo madre (che userà questa action).
+Gli input che il workflow passerà alla action.
+
+sintassi documento action.yaml:
+
+
+1) 
+runs:
+  using: "docker"
+  image: "Docker
+
+
+runs → Come eseguire l’action.
+using: "docker" → Dice che l’action gira dentro un container Docker.
+image: "Dockerfile" → Usa il Dockerfile presente nella repo per creare l’immagine
+
+Collegamento con Docker:
+Il workflow, quando chiama questa action, builda il Dockerfile, crea un container e lo avvia.
+Dentro il container parte entrypoint.sh (perché nel Dockerfile hai ENTRYPOINT ["/entrypoint.sh"]).
+
+
+Collegamento con Docker
+Esatto: il workflow chiama la tua action → builda il Dockerfile → crea il container → avvia entrypoint.sh → dentro lo script parte feed.py.
+Quindi sì, Docker contiene entrypoint.sh e il tuo script Python.
+
+
+2) branding:
+  icon: "git-branch"
+  color: "red"
+``
+
+branding → Solo estetica per il Marketplace.
+icon → Puoi scegliere tra icone predefinite (es. git-branch, upload, download).
+color → Colore del badge (es. red, blue, green).
+
+
+
+
+
+
+
+3) input:
+  email:
+    description: The committer's email address
+    required: true
+    default: ${{ github.actor }}@localhost
+  name:
+    description: The committer's name 
+    required: true 
+    default: ${{ github.actor }}
+
+collegato con in entrypoint.sh : 
+
+git confing --global user.name "${GITHUB_ACTOR}"
+git confing --global user.email "${INPUT_EMAIL}"
+
+Collegamento con variabili globali (entrypoint.sh)
+Nel tuo entrypoint.sh hai:
+
+
+
+
+erché si vincola la struttura così?
+
+GitHub richiede questa sintassi per capire:
+
+Come eseguire l’action (runs).
+Quali input aspettarsi (inputs).
+Come mostrarla nel Marketplace (branding).
+
+
+
+Non puoi inventare campi a caso: devono essere quelli documentati.
+Documentazione ufficiale:
+Metadata syntax for GitHub Actions
+
+
+
+Branding: posso cambiare nome?
+
+Branding è solo estetica per il Marketplace (icona e colore).
+Name dell’action puoi cambiarlo come vuoi.
+Icone e colori devono essere tra quelli supportati da GitHub (documentazione ufficiale)
+
+
+
+
+
+Perché qui non si usa using e steps come nel workflow?
+
+Workflow YAML (es. .github/workflows/main.yml) usa jobs e steps perché definisce cosa fare.
+Action YAML (es. action.yml) definisce come è fatta l’action.
+Branding non serve nel workflow perché è solo per il Marketplace.

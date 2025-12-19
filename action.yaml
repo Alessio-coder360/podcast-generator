@@ -1,0 +1,18 @@
+name: "Podcast Generator"
+author: "Alessio Cardone"
+description: "Generates a feed for a podcast"
+runs:
+  using: "docker"
+  image: "Dockerfile"
+branding: 
+  icon: "git-branch"
+  color: "red"
+input:
+  email:
+    description: The committer's email address
+    required: true
+    default: ${{ github.actor }}@localhost
+  name:
+    description: The committer's name 
+    required: true 
+    default: ${{ github.actor }}
