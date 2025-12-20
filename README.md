@@ -557,6 +557,28 @@ Se nello step “Build container for action use” vedi solo “Docker build fai
 
 
 
+
+
+Perché i secrets di debug li abbiamo aggiunti? Come funzionano?
+I secrets ACTIONS_STEP_DEBUG=true e ACTIONS_RUNNER_DEBUG=true sono flag speciali che GitHub Actions riconosce automaticamente per abilitare log dettagliati:
+
+Dove si mettono: in Settings → Secrets and variables → Actions → New repository secret nel repo che esegue il workflow (non nel repo dell’action).
+Nome del secret: esattamente ACTIONS_STEP_DEBUG (o ACTIONS_RUNNER_DEBUG).
+Valore: true (minuscolo, senza virgolette).
+Cosa fanno: quando il workflow parte, il runner li “legge” come segnali e attiva la modalità debug.
+Non li devi mettere nel workflow.yml (non serve env:), né “usarli” nel codice; sono magici: GitHub li “innesta” all’avvio del job.
+Cosa vedo: nei log appare ##[debug] ... (che infatti ora vedi).
+Se la build Docker fallisce, con il debug vedi il punto esatto/stack trace.
+
+
+In sintesi: sono interruttori di debug gestiti da GitHub. Metterli su true → più log. Non entrano nel container; agiscono prima e durante l’esecuzione del job.
+
+
+
+
+
+
+
 CAMBIO FILE DOCKERFILE ACTION.YAML E WORKFLOW SU GITHUB:
 
 1) Cosa abbiamo cambiato (lista chiara con motivo)
@@ -633,3 +655,57 @@ with:
 Perché è errore:
 
 Senza with, INPUT_NAME e INPUT_EMAIL in entrypoint rimangono vuoti → Git usa valori globali vuoti o fallisce nelle firme commit.
+
+
+
+
+
+
+
+
+
+
+
+
+vecchio documento docker da tutorial : 
+
+
+FROM ubuntu:latest
+
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    git
+
+RUN pip3 install PyYAML
+
+COPY feed.py /usr/bin/feed.py
+
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+WORKDIR /github/workspace
+
+
+
+
+AAPOROFNDITE QUESTO COMAND :
+
+git update-index --chmod=+x entrypoint.sh
+
+sed -i 's/\r$//' /entrypoint.sh
+
+
+
+
+
+
+
+Perché git update-index ... ti dice “not a git repository”?
+Perché lo stai eseguendo dentro il container (root@...:/github/workspace), che non contiene la tua .git (non è il tuo repo, è il filesystem del container).
+I comandi git che aggiornano il repository vanno fatti nel tuo Codespace o sulla tua macchina, nella cartella del progetto (dove c’è .git).
+Quindi fai così:
+
+
+Esci dal container:
+exit
