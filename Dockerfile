@@ -25,5 +25,5 @@ COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 WORKDIR /github/workspace
 
-# 6) Entry point dell'action (non cambia la tua logica)
-ENTRYPOINT ["/entrypoint.sh"]
+# 6) Entry point dell'action (non cambia la tua logica) aggiunto bash perche ? 
+ENTRYPOINT ["bash", "/entrypoint.sh"]

@@ -731,3 +731,30 @@ In basso a destra (status bar) vedi LF o CRLF.
 Cliccalo → scegli LF → Salva il file.
 
 Se preferisci terminale su Mac, ti do comandi pronti.
+
+
+
+Spiegazione “da beginner” dei comandi che ti ho fatto usare
+
+
+xxd -g 1 -l 8 file
+Mostra i primi 8 byte del file in esadecimale.
+0a = carattere LF (una riga nuova). Se il file inizia con 0a, vuol dire riga vuota prima dello shebang → errore.
+
+
+LF vs CRLF
+
+LF: fine riga “Linux/Mac” → OK per Docker.
+CRLF: fine riga “Windows” → spesso rompe gli script (appare ^M).
+In VS Code puoi cambiare CRLF ↔ LF in basso a destra.
+perl -pi -e 's/\r$//' file rimuove i \r (CR) alla fine di riga → converte CRLF → LF.
+
+
+
+git update-index --chmod=+x entrypoint.sh
+Dice a Git di marcare il file come “eseguibile” dentro il repository.
+Così anche quando GitHub Actions fa checkout, il file ha già il permesso giusto.
+
+
+docker build --no-cache ...
+Forza Docker a non riusare i layer vecchi: copia il nuovo entrypoint.sh nella nuova immagine.
