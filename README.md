@@ -709,3 +709,25 @@ Quindi fai così:
 
 Esci dal container:
 exit
+
+
+
+
+
+
+
+
+
+
+Cos’è “LF” in VS Code (spiegato da beginner)
+
+LF = stile Linux/Mac → OK per Docker/Linux
+CRLF = stile Windows → spesso rompe gli script in Docker/Linux
+
+In VS Code:
+
+Apri entrypoint.sh
+In basso a destra (status bar) vedi LF o CRLF.
+Cliccalo → scegli LF → Salva il file.
+
+Se preferisci terminale su Mac, ti do comandi pronti.
