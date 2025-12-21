@@ -578,6 +578,39 @@ In sintesi: sono interruttori di debug gestiti da GitHub. Metterli su true → p
 
 
 
+🔧 Perché ora parte il container?
+Il tuo errore era:
+exec /entrypoint.sh: exec format error
+
+Questo succede quando il kernel prova ad eseguire direttamente il file /entrypoint.sh e non riconosce subito lo shebang (#!) come primissimi 2 byte del file (oppure sono presenti byte “sporchi” in testa, una riga vuota prima, BOM, o CRLF).
+Anche dopo aver sistemato LF, avevamo visto con xxd che c’era un byte LF (0a) prima dello shebang. Questo basta per mandare in errore l’exec del kernel.
+Cosa hai cambiato:
+
+ENTRYPOINT ["/entrypoint.sh"]
+
+con:
+
+ENTRYPOINT ["bash", "/entrypoint.sh"]
+
+Questa modifica aggira il problema:
+
+Invece di chiedere al kernel di interpretare il file (che richiede che i primi 2 byte siano #! senza nulla prima), tu esegui direttamente bash e gli passi lo script come argomento.
+bash non usa il meccanismo del kernel basato sullo shebang; apre il file e lo interpreta come testo, ignorando eventuali byte di newline iniziali, BOM, ecc.
+Risultato: lo script parte anche se c’è quella riga vuota o caratteri extra prima di #!.
+
+Per questo nel tuo test locale vedi subito la prompt root@...:/github/workspace#: significa che il container è partito e sei dentro la shell/ambiente giusto.
+
+In breve: “ENTRYPOINT bash” è una scorciatoia robusta: evita di dipendere dalla perfezione del file (shebang al primo byte, nessun CRLF/BOM). Va benissimo per una GitHub Action Docker.
+
+
+
+
+
+
+
+
+
+
 
 CAMBIO FILE DOCKERFILE ACTION.YAML E WORKFLOW SU GITHUB:
 
